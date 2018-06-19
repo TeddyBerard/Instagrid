@@ -28,6 +28,10 @@
 	<array>
 		<string>armv7</string>
 	</array>
+	<key>NSCameraUsageDescription</key>
+	<string>Instagrid souhaite accéder à votre camera, pour que vous preniez une photo.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Instagrid souhaite accéder à vos photos, pour que vous en sélectionner une.</string>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
