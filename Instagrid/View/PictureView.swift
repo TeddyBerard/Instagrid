@@ -10,10 +10,10 @@ import UIKit
 
 class PictureView: UIView {
 
-    @IBOutlet private var PictureTopLeft: UIButton!
-    @IBOutlet private var PictureTopRight: UIButton!
-    @IBOutlet private var PictureBotRight: UIButton!
-    @IBOutlet private var PictureBotLeft: UIButton!
+    @IBOutlet private var pictureTopLeft: UIButton!
+    @IBOutlet private var pictureTopRight: UIButton!
+    @IBOutlet private var pictureBotRight: UIButton!
+    @IBOutlet private var pictureBotLeft: UIButton!
     
     enum Style {
         case Left, Middle, Right
@@ -25,7 +25,7 @@ class PictureView: UIView {
         }
     }
     
-    public func captureView() -> UIImage {
+    public func captureView() -> UIImage { // capture the view in UIImage and return it
         let renderer = UIGraphicsImageRenderer(size: self.bounds.size)
         let image = renderer.image { (succes) in
             self.drawHierarchy(in: self.bounds, afterScreenUpdates: true)
@@ -33,31 +33,8 @@ class PictureView: UIView {
         return image
     }
     
-    public func changePicture(name: String, image: UIImage) {
-        switch name {
-        case "PictureTopLeft":
-            self.PictureTopLeft.setImage(image, for: .normal)
-            self.PictureTopLeft.imageView?.contentMode = .scaleToFill
-            break
-        case "PictureTopRight":
-            self.PictureTopRight.setImage(image, for: .normal)
-            self.PictureTopRight.imageView?.contentMode = .scaleToFill
-            break
-        case "PictureBotLeft":
-            self.PictureBotLeft.setImage(image, for: .normal)
-            self.PictureBotLeft.imageView?.contentMode = .scaleToFill
-            break
-        case "PictureBotRight":
-            self.PictureBotRight.setImage(image, for: .normal)
-            self.PictureBotRight.imageView?.contentMode = .scaleToFill
-            break
-        default:
-            break
-        }
-    }
     
-    
-    private func setStyle(_ style: Style) {
+    private func setStyle(_ style: Style) { // set the style
         switch style {
         case .Left:
             setLeft()
@@ -71,44 +48,50 @@ class PictureView: UIView {
         }
     }
     
-    private func setLeft() {
-        PictureTopLeft.frame.size.width = 270
-        
-        PictureBotLeft.frame.size.width = 127.5
-        PictureTopRight.isHidden = true
-        PictureBotRight.isHidden = false
+    private func setLeft() { // set the view for the arregment left
+        pictureTopLeft.frame.size.width = pictureTopRight.frame.size.width * 2 + 15
+        pictureBotLeft.frame.size.width = pictureBotRight.frame.size.width
+        pictureTopRight.isHidden = true
+        pictureBotRight.isHidden = false
+        self.pictureTopLeft.imageView?.contentMode = .center
+        self.pictureBotLeft.imageView?.contentMode = .scaleToFill
         animateSquare()
     }
     
     private func setMiddle() {
-        PictureTopLeft.frame.size.width = 127.5
-        PictureBotLeft.frame.size.width = 270
-        PictureBotLeft.frame.size.height = 127.5
-        PictureBotRight.isHidden = true
-        PictureTopRight.isHidden = false
+        pictureTopLeft.frame.size.width = pictureTopRight.frame.size.width
+        pictureBotLeft.frame.size.width = pictureBotRight.frame.size.width * 2 + 15
+        pictureBotRight.isHidden = true
+        pictureTopRight.isHidden = false
+        self.pictureTopLeft.imageView?.contentMode = .scaleToFill
+        self.pictureBotLeft.imageView?.contentMode = .center
+
         animateSquare()
     }
     
     private func setRight() {
-        PictureTopLeft.frame.size.width = 127.5
-        PictureBotLeft.frame.size.width = 127.5
-        PictureTopRight.isHidden = false
-        PictureTopLeft.isHidden = false
-        PictureBotLeft.isHidden = false
-        PictureBotRight.isHidden = false
+        pictureTopLeft.frame.size.width = pictureTopRight.frame.size.width
+        pictureBotLeft.frame.size.width = pictureTopRight.frame.size.width
+        pictureTopRight.isHidden = false
+        pictureTopLeft.isHidden = false
+        pictureBotLeft.isHidden = false
+        pictureBotRight.isHidden = false
+        
+        self.pictureBotLeft.imageView?.contentMode = .scaleToFill
+        self.pictureTopLeft.imageView?.contentMode = .scaleToFill
         animateSquare()
     }
     
-    private func animateSquare() {
-        PictureTopLeft.transform = CGAffineTransform(scaleX: 0.01, y: 0.01)
-        PictureBotRight.transform = CGAffineTransform(scaleX: 0.01, y: 0.01)
-        PictureBotLeft.transform = CGAffineTransform(scaleX: 0.01, y: 0.01)
-        PictureTopRight.transform = CGAffineTransform(scaleX: 0.01, y: 0.01)
+    private func animateSquare() { // Animate the view when a arragement are selected
+        pictureTopLeft.transform = CGAffineTransform(scaleX: 0.01, y: 0.01)
+        pictureBotRight.transform = CGAffineTransform(scaleX: 0.01, y: 0.01)
+        pictureBotLeft.transform = CGAffineTransform(scaleX: 0.01, y: 0.01)
+        pictureTopRight.transform = CGAffineTransform(scaleX: 0.01, y: 0.01)
         UIView.animate(withDuration: 0.4, delay: 0, usingSpringWithDamping: 0.5, initialSpringVelocity: 0.5, options: [], animations: {
-            self.PictureTopLeft.transform = .identity
-            self.PictureBotRight.transform = .identity
-            self.PictureBotLeft.transform = .identity
-            self.PictureTopRight.transform = .identity
+            self.pictureTopLeft.transform = .identity
+            self.pictureBotRight.transform = .identity
+            self.pictureBotLeft.transform = .identity
+            self.pictureTopRight.transform = .identity
         }, completion: nil)
     }
 }

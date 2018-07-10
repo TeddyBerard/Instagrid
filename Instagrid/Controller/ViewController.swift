@@ -9,7 +9,7 @@
 import UIKit
 import Photos
 
-class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
+class ViewController: UIViewController {
 
     @IBOutlet weak var ArrangementLeft: UIButton!
     @IBOutlet weak var ArrangementMiddle: UIButton!
@@ -18,12 +18,16 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     @IBOutlet weak var swipeImage: UIImageView!
     @IBOutlet weak var swipeLabel: UILabel!
     
+    var translation = CGPoint(x: 0.00, y: 0.00)
+    var selectedPicture = Picture()
+    
+
     enum Arrangement {
         case Left, Middle, Right
     }
     
     var arrangement : Arrangement = .Middle
-    var buttonSelected = ""
+    var buttonSelected : UIButton?
 
     
     override func viewDidLoad() {
@@ -36,35 +40,54 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         pictureView.addGestureRecognizer(panGestureReconizer)
     }
     
-    @objc func sendCreation(_ sender: UIPanGestureRecognizer) {
+    @objc func sendCreation(_ sender: UIPanGestureRecognizer) { // send the creation with some animation
         switch sender.state {
         case .began, .changed:
             transformPictureViewWith(gesture: sender)
             break
         case .cancelled, .ended:
-            let translation = sender.translation(in: pictureView)
-            print(translation.y)
             UIView.animate(withDuration: 0.6, delay: 0, usingSpringWithDamping: 0.5, initialSpringVelocity: 0.5, options: [], animations: {
-                self.pictureView.transform = .identity
+                self.translation = sender.translation(in: self.pictureView) // model 
+                if UIDevice.current.orientation.isLandscape && self.translation.x < -1.00 {
+                    self.pictureView.transform = CGAffineTransform(translationX: -1000.00, y: self.translation.y)
+                } else if UIDevice.current.orientation.isPortrait && self.translation.y < -1.00 {
+                    self.pictureView.transform = CGAffineTransform(translationX: self.translation.x, y: -1000.00)
+                } else {
+                    self.pictureView.transform = .identity
+                }
             }, completion: { (succes) in
-                let image = self.pictureView.captureView()
-                let activityViewController = UIActivityViewController(activityItems: [image], applicationActivities: nil)
-                self.present(activityViewController, animated: true, completion: nil)
+                print(self.translation)
+                if UIDevice.current.orientation.isLandscape && self.translation.x < -1.00 {
+                    self.sharePicture()
+                } else if UIDevice.current.orientation.isPortrait && self.translation.y < -1.00 {
+                    self.sharePicture()
+                }
             })
             break
         default:
             break
         }
     }
+   
+    private func sharePicture() { // call the shared view Model
+        let image = self.pictureView.captureView()
+        let activityViewController = UIActivityViewController(activityItems: [image], applicationActivities: nil)
+        self.present(activityViewController,animated: true, completion: {})
+        activityViewController.completionWithItemsHandler = { activity, succes, items, error in
+            self.pictureView.transform = CGAffineTransform(scaleX: 0.01, y: 0.01)
+            UIView.animate(withDuration: 0.4, delay: 0, usingSpringWithDamping: 0.5, initialSpringVelocity: 0.5, options: [], animations: {
+                self.pictureView.transform = .identity
+            }, completion: nil)
+        }
+    }
     
-    private func transformPictureViewWith(gesture: UIPanGestureRecognizer) {
+    private func transformPictureViewWith(gesture: UIPanGestureRecognizer) { // add gesture for move the view question
         let translation = gesture.translation(in: pictureView)
         let translationTransform = CGAffineTransform(translationX: translation.x , y: translation.y)
-        
         pictureView.transform = translationTransform
     }
     
-    func setArrangement() {
+    func setArrangement() { // set the arrangement of the view question
         switch self.arrangement {
         case .Left:
             pictureView.style = .Left
@@ -88,7 +111,7 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     }
     
     
-    @IBAction func selectedLeftButton(_ sender: Any) {
+    @IBAction func selectedLeftButton(_ sender: Any) { // Action for change the arrangement of picture
         self.arrangement = .Left
         setArrangement()
     }
@@ -104,7 +127,7 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     }
     
     
-    func changeTextSwipeLabel() {
+    func changeTextSwipeLabel() { // Change text and image
         if UIDevice.current.orientation.isLandscape {
             swipeLabel.text = "Swipe left to share"
             swipeImage.image = #imageLiteral(resourceName: "chevron left")
@@ -115,7 +138,7 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     }
     
     
-    override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
+    override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) { // Recall the style when the user change orientation of photne
         super.viewWillTransition(to: size, with: coordinator)
         self.changeTextSwipeLabel()
         coordinator.animate(alongsideTransition: nil, completion: {
@@ -136,66 +159,58 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     
     
     
-    private func callPicker() {
+    private func callPicker() { // Print the Alert so that the user can choose method to take picture
         let imagePicker = UIImagePickerController()
         imagePicker.delegate = self
         
-        let ac = UIAlertController(title: "Photo source", message: "Choose a method", preferredStyle: .actionSheet)
-        
+        let ac = UIAlertController(title: "Photo source", message: "Choisissez Camera pour prendre une photo ou Photo pour sélectionner une photo depuis votre photothèque.", preferredStyle: .actionSheet)
+    
         ac.addAction(UIAlertAction(title: "Camera", style: .default, handler: { (action:UIAlertAction) in
             imagePicker.sourceType = .camera
             self.present(imagePicker, animated: true, completion: nil)
-            
         }))
         
         ac.addAction(UIAlertAction(title: "Photo", style: .default, handler: { (action:UIAlertAction) in
             imagePicker.sourceType = .photoLibrary
            self.present(imagePicker, animated: true, completion: nil)
-            
         }))
         
         ac.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: { (nil) in
         }))
-        
         present(ac, animated: true, completion: nil)
     }
     
-    func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [String : Any]) {
-        if let pickedImage = info[UIImagePickerControllerOriginalImage] as? UIImage {
-            self.pictureView.changePicture(name: buttonSelected, image: pickedImage)
-        }
-        picker.dismiss(animated: true, completion: nil)
-    }
     
-    func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
-        picker.dismiss(animated: true, completion: nil)
-    }
-    
-    @IBAction func PictureTopLeftButton(_ sender: Any) {
-        print("Ok")
+    @IBAction func PictureTopLeftButton(_ sender: Any) { // Action for select the method for select the picture and know which are selected
         askPermissionPicture()
-        buttonSelected = "PictureTopLeft"
+       // self.selectedPicture
+        if let button = sender as? UIButton {
+            buttonSelected = button
+        }
     }
     
     @IBAction func PictureTopRightButton(_ sender: Any) {
-        print("Ok")
         askPermissionPicture()
-        buttonSelected = "PictureTopRight"
+        if let button = sender as? UIButton {
+            buttonSelected = button
+        }
     }
     
     @IBAction func PictureBotLeftButton(_ sender: Any) {
-        print("Ok")
-        buttonSelected = "PictureBotLeft"
         askPermissionPicture()
+        if let button = sender as? UIButton {
+            buttonSelected = button
+        }
     }
     
     @IBAction func PictureBotRightButton(_ sender: Any) {
-        print("Ok")
         askPermissionPicture()
-        buttonSelected = "PictureBotRight"
+        if let button = sender as? UIButton {
+            buttonSelected = button
+        }
     }
     
-    func askPermissionPicture() {
+    func askPermissionPicture() { // Ask the permission for select or take picture /!\ Important
         let photos = PHPhotoLibrary.authorizationStatus()
         if photos == .notDetermined {
             PHPhotoLibrary.requestAuthorization({status in
@@ -208,8 +223,25 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
             self.callPicker()
         }
     }
+}
+
+extension ViewController : UIImagePickerControllerDelegate, UINavigationControllerDelegate {
     
+    func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [String : Any]) { // Call the function for change the picture when the user valid a picture
+        if let pickedImage = info[UIImagePickerControllerOriginalImage] as? UIImage {
+            selectedPicture.selectedPicture = pickedImage
+        }
+        picker.dismiss(animated: true, completion: {
+            var image = UIImage()
+            image = self.selectedPicture.selectedPicture
+            self.buttonSelected?.setImage(image, for: .normal)
+            //
+        })
+    }
     
+    func imagePickerControllerDidCancel(_ picker: UIImagePickerController) { // dismiss the view of photo library or camera when the user stop it
+        picker.dismiss(animated: true, completion: nil)
+    }
 
 }
 
